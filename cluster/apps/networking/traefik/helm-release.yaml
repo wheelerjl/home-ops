@@ -9,7 +9,7 @@ spec:
   chart:
     spec:
       chart: traefik
-      version: 10.22.0
+      version: 10.24.0
       sourceRef:
         kind: HelmRepository
         name: traefik
@@ -22,19 +22,64 @@ spec:
   upgrade:
     remediation:
       retries: 5
+      remediateLastFailure: true
   dependsOn:
     - name: cert-manager
       namespace: kube-system
     - name: metallb
       namespace: networking
   values:
+    image:
+      name: traefik
+      tag: 2.6.1
+      pullPolicy: IfNotPresent
     deployment:
       kind: Deployment
       replicas: 1
+      podAnnotations:
+        reloader.stakater.com/auto: "true"
+      additionalContainers:
+        - name: cloudflared
+          image: raspbernetes/cloudflared:2022.7.1
+          args:
+            - tunnel
+            # Points cloudflared to the config file, which configures what
+            # cloudflared will actually do. This file is created by a ConfigMap
+            # below.
+            - --config
+            - /etc/cloudflared/config/config.yaml
+            - run
+          livenessProbe:
+            httpGet:
+              # Cloudflared has a /ready endpoint which returns 200 if and only if
+              # it has an active connection to the edge.
+              path: /ready
+              port: 2000
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          volumeMounts:
+            - name: cloudflared-config
+              mountPath: /etc/cloudflared/config
+              readOnly: true
+            - name: cloudflared-credentials
+              mountPath: /etc/cloudflared/creds
+              readOnly: true
+      additionalVolumes:
+        - name: cloudflared-credentials
+          secret:
+            secretName: cloudflared-credentials
+        - name: cloudflared-config
+          configMap:
+            name: cloudflared-config
+            items:
+              - key: config.yaml
+                path: config.yaml
     service:
       enabled: true
       type: LoadBalancer
       annotations:
+        metallb.universe.tf/allow-shared-ip: traefik-svc
         metallb.universe.tf/loadBalancerIPs: |-
           ${METALLB_TRAEFIK_ADDR}
       spec:
@@ -62,6 +107,7 @@ spec:
       - "--entryPoints.websecure.forwardedHeaders.trustedIPs=10.0.0.0/8,192.168.0.0/16,172.16.0.0/12,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,104.16.0.0/13,104.24.0.0/14,108.162.192.0/18,131.0.72.0/22,141.101.64.0/18,162.158.0.0/15,172.64.0.0/13,173.245.48.0/20,188.114.96.0/20,190.93.240.0/20,197.234.240.0/22,198.41.128.0/17,2400:cb00::/32,2606:4700::/32,2803:f800::/32,2405:b500::/32,2405:8100::/32,2a06:98c0::/29,2c0f:f248::/32"
     additionalArguments:
       - "--providers.kubernetesingress.ingressendpoint.ip=${METALLB_TRAEFIK_ADDR}"
+      - "--providers.kubernetesingress.ingressendpoint.hostname=homelab-tunnel.${SECRET_DOMAIN}"
       - "--providers.kubernetesingress.allowexternalnameservices=true"
       - "--providers.kubernetescrd.allowexternalnameservices=true"
     ports:
@@ -93,3 +139,5 @@ spec:
         cpu: 500m
       limits:
         memory: 500Mi
+    podAnnotations:
+      secret.reloader.stakater.com/reload: "traefik-secrets"
