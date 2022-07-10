@@ -50,7 +50,7 @@ echo ""
 echo "  Checking FiraCode Installation"
 if ! command -v $(dpkg -s fonts-firacode) &> /dev/null
 then
-    echo "  Install VSCode with the following commands"
+    echo "  Install FiraCode with the following commands"
     echo "      sudo apt install fonts-firacode"
     read -n 1 -s -r -p "  Press any key to continue"
 else
@@ -121,6 +121,7 @@ then
     echo "      code --install-extension golang.go"
     echo "      code --install-extension PKief.material-icon-theme"
     echo "      code --install-extension eamodio.gitlens"
+    echo "      code --install-extension signageos.signageos-vscode-sops"
     read -n 1 -s -r -p "  Press any key to continue"
     echo "  Update VSCode User Settings"
     echo "      Documentation: https://code.visualstudio.com/docs/getstarted/settings#_changing-settingsjson"
