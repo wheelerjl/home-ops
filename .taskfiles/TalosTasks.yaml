@@ -13,10 +13,10 @@ tasks:
     cmds:
       - talosctl bootstrap -n $CP0_NODE_IP
 
-  verify-cp0:
-    desc: Get logs for Control Plane Node 0
+  kubeconfig:
+    desc: Get kubeconfig from control plane
     cmds:
-      - talosctl dmesg -f -n $CP0_NODE_IP
+      - talosctl kubeconfig "{{.PROJECT_DIR}}/provision/kubeconfig" --force-context-name oruse --nodes $CP0_NODE_IP
 
   setup-w0:
     desc: Setup Talos Worker Node 0
@@ -32,3 +32,23 @@ tasks:
     desc: Setup Talos Worker Node 2
     cmds:
       - talosctl apply-config --insecure --nodes $W2_NODE_IP --file $HOME/.talos/w2.yaml
+
+  verify-cp0:
+    desc: Get logs for Control Plane Node 0
+    cmds:
+      - talosctl dmesg -f -n $CP0_NODE_IP
+
+  verify-w0:
+    desc: Get logs for Worker Node 0
+    cmds:
+      - talosctl dmesg -f -n $W0_NODE_IP
+
+  verify-w1:
+    desc: Get logs for Worker Node 1
+    cmds:
+      - talosctl dmesg -f -n $W1_NODE_IP
+
+  verify-w2:
+    desc: Get logs for Worker Node 2
+    cmds:
+      - talosctl dmesg -f -n $W2_NODE_IP
