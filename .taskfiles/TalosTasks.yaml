@@ -1,0 +1,34 @@
+---
+version: "3"
+
+tasks:
+
+  setup-cp0:
+    desc: Setup Talos Control Plane Node 0
+    cmds:
+      - talosctl apply-config --insecure --nodes $CP0_NODE_IP --file $HOME/.talos/cp0.yaml
+
+  bootstrap-cp0:
+    desc: Bootstrap the Control Plane Node 0
+    cmds:
+      - talosctl bootstrap -n $CP0_NODE_IP
+
+  verify-cp0:
+    desc: Get logs for Control Plane Node 0
+    cmds:
+      - talosctl dmesg -f -n $CP0_NODE_IP
+
+  setup-w0:
+    desc: Setup Talos Worker Node 0
+    cmds:
+      - talosctl apply-config --insecure --nodes $W0_NODE_IP --file $HOME/.talos/w0.yaml
+
+  setup-w1:
+    desc: Setup Talos Worker Node 1
+    cmds:
+      - talosctl apply-config --insecure --nodes $W1_NODE_IP --file $HOME/.talos/w1.yaml
+
+  setup-w2:
+    desc: Setup Talos Worker Node 2
+    cmds:
+      - talosctl apply-config --insecure --nodes $W2_NODE_IP --file $HOME/.talos/w2.yaml

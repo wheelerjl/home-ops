@@ -1,0 +1,36 @@
+---
+version: "3"
+
+vars:
+  PROJECT_DIR:
+    sh: "git rev-parse --show-toplevel"
+  CLUSTER_DIR: "{{.PROJECT_DIR}}/cluster"
+  TERRAFORM_DIR: "{{.PROJECT_DIR}}/provision/terraform"
+
+dotenv: [".config.env"]
+
+env:
+  KUBECONFIG: "{{.PROJECT_DIR}}/provision/kubeconfig"
+
+includes:
+  cluster: .taskfiles/ClusterTasks.yaml
+  precommit: .taskfiles/PrecommitTasks.yaml
+  terraform: .taskfiles/TerraformTasks.yaml
+  talos: .taskfiles/TalosTasks.yaml
+
+tasks:
+
+  init:
+    desc: Initialize workstation dependencies
+    cmds:
+      - ./hack/do-nothing/dev-setup-manual.sh
+
+  verify:
+    desc: Verify env settings
+    cmds:
+      - ./configure --verify
+
+  configure:
+    desc: Configure repository from env settings
+    cmds:
+      - ./configure
